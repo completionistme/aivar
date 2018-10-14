@@ -1,6 +1,11 @@
+import codecs
+import json
 import ntpath
 import urllib.request
 import xml.etree.cElementTree as ET
+
+import numpy as np
+from xmljson import parker
 
 
 class Handler:
@@ -21,11 +26,21 @@ class SteamHandler(Handler):
 
         # download xml
         stats_xml = job.work_folder + 'stats.xml'
-        urllib.request.urlretrieve(self.xml_stats_url, stats_xml)
+        # urllib.request.urlretrieve(self.xml_stats_url, stats_xml)
 
-        # download iconClosed images to subjectsDir
+        # download iconClosed images
         root = ET.parse(stats_xml).getroot()
-        for form in root.findall("./achievements/achievement/iconClosed"):
-            subject_file_name = ntpath.basename(form.text)
-            urllib.request.urlretrieve(form.text, job.subjects_dir + subject_file_name)
+        subjects = parker.data(root.find("./achievements"), preserve_root=True).get('achievements').get('achievement')
+        for subject in subjects:
+            subject_url = subject.get('iconClosed')
+            urllib.request.urlretrieve(subject_url, job.subjects_dir + ntpath.basename(subject_url))
+
+        def default(o):
+            if isinstance(o, np.int64): return int(o)
+            raise TypeError
+
+        # store subjects as json
+        json.dump(subjects, codecs.open(job.subjects_file, 'w', encoding='utf-8'), separators=(',', ':'),
+                  sort_keys=True, indent=4, default=default)
+        print('subjects stored to ' + job.subjects_file)
         print('done')

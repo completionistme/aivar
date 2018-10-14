@@ -21,6 +21,9 @@ class Job:
         self.subjects_dir = self.work_folder + subjects_folder_name + '/'
         self.matches_dir = self.work_folder + matches_folder_name + '/'
 
+        self.subjects_file = self.work_folder + 'subjects.json'
+        self.results_file = self.work_folder + 'results.json'
+
         self.setup()
 
     def setup(self):

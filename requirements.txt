@@ -1,3 +1,4 @@
 opencv_python
 numpy
 pytube
+xmljson

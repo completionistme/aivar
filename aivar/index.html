@@ -7,8 +7,6 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.3/darkly/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-w+yWASP3zYNxxvwoQBD5fUSc1tctKq4KUiZzxgkBSJACiUp+IbweVKvsEhMI+gz7" crossorigin="anonymous">
     <title>Document</title>
@@ -21,9 +19,18 @@
     </div>
 
     <div id="unlocks"></div>
+    <pre id="results"></pre>
+    <pre id="subjects"></pre>
 
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://www.youtube.com/iframe_api"></script>
     <script>
+        var videoId = '%video_id%';
+        var frameInterval = parseInt('%frame_interval_seconds%');
+        var subjects = %subjects%;
+        var results = %results%;
+
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -34,7 +41,7 @@
             player = new YT.Player('player', {
                 height: '390',
                 width: '640',
-                videoId: '%video_id%',
+                videoId: videoId,
                 events: {
                     'onReady': onPlayerReady,
                     'onStateChange': onPlayerStateChange
@@ -74,53 +81,39 @@
             }
         }
 
-        var $stats, schema, unlocks;
-        $.get('stats.xml').then(stats => {
-            schema = [];
-            $stats = $('achievement', stats).each((index, achievement) => {
-                var $achievement = $(achievement);
-                var title = $achievement.find('name').text();
-                var description = $achievement.find('description').text();
-                var iconUrl = $achievement.find('iconClosed').text();
-                // var hash = iconUrl.substring(iconUrl.lastIndexOf('/')+1).split('.')[0];
-                var hash = iconUrl.substring(iconUrl.lastIndexOf('/') + 1);
-                schema.push({
-                    hash: hash,
-                    iconUrl: iconUrl,
-                    title: title,
-                    description: description,
-                });
+        var unlocks = [];
+        $('#results').text(JSON.stringify(results));
+        $('#subjects').text(JSON.stringify(subjects));
+        results.map(function (result) {
+            var achievement = subjects.find(function (achievement) {
+                return achievement.iconClosed.substring(achievement.iconClosed.lastIndexOf('/')+1) === result.subject;
             });
-
-            $.get('result.json').then(results => {
-                $('#results').text(JSON.stringify(results));
-                var unlocks = [];
-                results.map(result => {
-                    var unlock = schema.find(achievement => {
-                        return achievement.hash === result.subject;
-                    });
-                    // TODO: add all possible achievements for selection - icons may have been reused
-                    // if (unlock && unlocks.indexOf(unlock) < 0) {
-                        unlock.unlockAtSecond = (parseInt(result.frame.split('.')[0]) - 1) * 5;
-                        unlock.unlockAt = Math.floor(unlock.unlockAtSecond / 60) + ':' + unlock.unlockAtSecond % 60;
-                        unlocks.push(unlock)
-                    // }
-                });
-                unlocks.forEach(unlock => {
-                    $('#unlocks').append('<div class="media mb-2 align-content-center p-2 bg-light">' +
-                        '<div class="mr-3 flex-row justify-content-center">' +
-                        '<a href="#"  onclick="seekTo(' + unlock.unlockAtSecond + ');">' + unlock.unlockAt + '</a>' +
-                        '</div>' +
-                        '<img class="mr-3" src="' + unlock.iconUrl + '" alt="">' +
-                        '<div class="media-body">' +
-                        '<b>' + unlock.title + '</b><br>' +
-                        '<span class="text-muted">' + unlock.description + '</span>' +
-                        '</div>' +
-                        '</div>'
-                    )
-                })
-            }).catch()
-        }).catch()
+            if (achievement
+            //&& achievement.indexOf(achievement) < 0
+            ) {
+                var unlockAtSecond = (parseInt(result.frame.split('.')[0]) - 1) * frameInterval;
+                var minutes = Math.floor(unlockAtSecond / 60)
+                minutes = minutes < 10 ? '0'+minutes : minutes
+                var seconds = unlockAtSecond % 60
+                seconds = seconds < 10 ? '0'+seconds : seconds
+                achievement.unlockAtSecond = unlockAtSecond;
+                achievement.unlockAt = minutes + ':' + seconds;
+                unlocks.push(achievement)
+            }
+        });
+        unlocks.forEach(function (unlock) {
+            $('#unlocks').append('<div class="media mb-2 align-content-center p-2 bg-light">' +
+                '<div class="mr-3 flex-row justify-content-center">' +
+                '<a href="#"  onclick="seekTo(' + unlock.unlockAtSecond + ');">' + unlock.unlockAt + '</a>' +
+                '</div>' +
+                '<img class="mr-3" src="' + unlock.iconClosed + '" alt="">' +
+                '<div class="media-body">' +
+                '<b>' + unlock.title + '</b><br>' +
+                '<span class="text-muted">' + unlock.description + '</span>' +
+                '</div>' +
+                '</div>'
+            )
+        })
     </script>
 </div>
 </body>

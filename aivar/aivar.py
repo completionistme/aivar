@@ -5,6 +5,7 @@ import json
 import ntpath
 import os
 import subprocess
+from pathlib import Path
 from shutil import copyfile
 
 import cv2
@@ -112,11 +113,11 @@ class Aivar:
         def default(o):
             if isinstance(o, np.int64): return int(o)
             raise TypeError
-        subject_result_json = self.job.work_folder + result_file_name
-        json.dump(results, codecs.open(subject_result_json, 'w', encoding='utf-8'), separators=(',', ':'),
+
+        json.dump(results, codecs.open(self.job.results_file, 'w', encoding='utf-8'), separators=(',', ':'),
                   sort_keys=True, indent=4, default=default)
+        print('results stored to ' + self.job.results_file)
         print('done')
-        print('results stored to ' + subject_result_json)
 
     def publish(self):
         print('--')
@@ -124,8 +125,14 @@ class Aivar:
         index_file = self.job.work_folder + 'index.html'
         copyfile('aivar/index.html', index_file)
         video_id = YouTube(self.job.vid_url).video_id
-        print(video_id)
+        subjects = Path(self.job.subjects_file).read_text()
+        results = Path(self.job.results_file).read_text()
         with fileinput.FileInput(index_file, inplace=True) as file:
             for line in file:
-                print(line.replace('%video_id%', video_id), end='')
+                print(
+                    line.replace('%frame_interval_seconds%', str(self.job.frame_interval_seconds))
+                        .replace('%video_id%',video_id)
+                        .replace('%subjects%', subjects)
+                        .replace('%results%', results)
+                    , end='')
         print('done')
