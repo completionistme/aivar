@@ -26,7 +26,7 @@ class SteamHandler(Handler):
 
         # download xml
         stats_xml = job.work_folder + 'stats.xml'
-        # urllib.request.urlretrieve(self.xml_stats_url, stats_xml)
+        urllib.request.urlretrieve(self.xml_stats_url, stats_xml)
 
         # download iconClosed images
         root = ET.parse(stats_xml).getroot()
