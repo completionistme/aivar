@@ -9,7 +9,7 @@ matches_folder_name = 'matches'
 
 
 class Job:
-    def __init__(self, vid_url, handler, frame_interval_seconds, icon_on_screen_size):
+    def __init__(self, vid_url, handler, frame_interval_seconds=5, icon_on_screen_size=64):
         self.vid_url = vid_url
         self.handler = handler
         self.frame_interval_seconds = frame_interval_seconds
@@ -23,6 +23,7 @@ class Job:
 
         self.subjects_file = self.work_folder + 'subjects.json'
         self.results_file = self.work_folder + 'results.json'
+        self.result_html_file = self.work_folder + 'index.html'
 
         self.setup()
 

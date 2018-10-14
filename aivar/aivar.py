@@ -127,12 +127,11 @@ class Aivar:
     def publish(self):
         print('--')
         print('publish')
-        result_html_file = self.job.work_folder + 'index.html'
-        copyfile('aivar/template.html', result_html_file)
+        copyfile('aivar/template.html', self.job.result_html_file)
         video_id = YouTube(self.job.vid_url).video_id
         subjects = Path(self.job.subjects_file).read_text()
         results = Path(self.job.results_file).read_text()
-        with fileinput.FileInput(result_html_file, inplace=True) as file:
+        with fileinput.FileInput(self.job.result_html_file, inplace=True) as file:
             for line in file:
                 print(
                     line.replace('%frame_interval_seconds%', str(self.job.frame_interval_seconds))
