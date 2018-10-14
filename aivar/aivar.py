@@ -12,8 +12,6 @@ import cv2
 import numpy as np
 from pytube import YouTube
 
-result_file_name = 'result.json'
-
 
 class Aivar:
     def __init__(self, job):
@@ -41,7 +39,14 @@ class Aivar:
         print('--')
         print('extract frames to ' + self.job.frames_dir)
         vid = glob.glob(self.job.download_dir + "*.mp4")[0]
-        bottom_right_crop = 'in_w/4:in_h/4:(in_w/4)*3:(in_h/4)*3'
+
+        # crop area presets
+        bottom_right_crop = 'in_w/4:in_h/3:(in_w/4)*3:(in_h/3)*2'
+        top_right_crop = 'in_w/4:in_h/3:(in_w/4)*3:0'
+        bottom_left_crop = 'in_w/4:in_h/3:0:(in_h/3)*2'
+        top_left_crop = 'in_w/4:in_h/3:0:0'
+
+        # todo: make the crop area an option, e.g. 'tr', 'br', 'bl', 'tl'; class constants
         crop = bottom_right_crop
         subprocess.call(['ffmpeg', '-i', vid, '-vf', 'crop=' + crop + ',fps=1/' + str(self.job.frame_interval_seconds),
                          self.job.frames_dir + '%04d.jpg'])
@@ -131,7 +136,7 @@ class Aivar:
             for line in file:
                 print(
                     line.replace('%frame_interval_seconds%', str(self.job.frame_interval_seconds))
-                        .replace('%video_id%',video_id)
+                        .replace('%video_id%', video_id)
                         .replace('%subjects%', subjects)
                         .replace('%results%', results)
                     , end='')
