@@ -1,55 +1,52 @@
-import errno
 import hashlib
 import os
+from urllib import parse as urlparse
 
-download_folder_name = 'source'
+from aivar.helpers import create_dir
+from aivar.logger import info, section, section_end
+
+source_folder_name = 'source'
 frames_folder_name = 'frames'
 subjects_folder_name = 'subjects'
 matches_folder_name = 'matches'
 
 
 class Job:
-    def __init__(self, vid_url, handler, frame_interval_seconds=5, icon_on_screen_size=64):
-        self.vid_url = vid_url
+    def __init__(self, video_url, handler, frame_interval_seconds=5, icon_on_screen_size=64):
+        self.video_url = video_url
+        self.job_id = hashlib.sha1(self.video_url.encode('utf-8')).hexdigest()
+        self.job_dir = os.getcwd() + '/jobs/' + self.job_id + '/'
+
+        self.video_type = self.determine_video_type(video_url)
+        self.video_source_name = self.job_id
         self.handler = handler
         self.frame_interval_seconds = frame_interval_seconds
         self.icon_on_screen_size = icon_on_screen_size
-        self.job_id = hashlib.sha1(self.vid_url.encode('utf-8')).hexdigest()
-        self.work_folder = os.getcwd() + '/jobs/' + self.job_id + '/'
-        self.download_dir = self.work_folder + download_folder_name + '/'
-        self.frames_dir = self.work_folder + frames_folder_name + '/'
-        self.subjects_dir = self.work_folder + subjects_folder_name + '/'
-        self.matches_dir = self.work_folder + matches_folder_name + '/'
+        self.source_dir = self.job_dir + source_folder_name + '/'
+        self.frames_dir = self.job_dir + frames_folder_name + '/'
+        self.subjects_dir = self.job_dir + subjects_folder_name + '/'
+        self.matches_dir = self.job_dir + matches_folder_name + '/'
 
-        self.subjects_file = self.work_folder + 'subjects.json'
-        self.results_file = self.work_folder + 'results.json'
-        self.result_html_file = self.work_folder + 'index.html'
+        self.subjects_file = self.job_dir + 'subjects.json'
+        self.matches_file = self.job_dir + 'matches.json'
+        self.results_file = self.job_dir + 'results.json'
+        self.result_html_file = self.job_dir + 'index.html'
 
-        self.setup()
+        self.video_source_path = self.source_dir + self.video_source_name + '.mp4'
+        self.video_poster_path = self.source_dir + self.video_source_name + '.jpg'
 
-    def setup(self):
-        try:
-            os.makedirs(self.work_folder)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-        try:
-            os.makedirs(self.download_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-        try:
-            os.makedirs(self.frames_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-        try:
-            os.makedirs(self.subjects_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-        try:
-            os.makedirs(self.matches_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
+        create_dir(self.job_dir)
+        section('[job]')
+        info('id: ' + self.job_id)
+        info('handler: ' + self.handler.type)
+        info('video: ' + self.video_type)
+        section_end()
+
+    def determine_video_type(self, video_url):
+        url = urlparse.urlparse(video_url)
+
+        if url.scheme == "":
+            return 'local'
+
+        if any(domain in self.video_url for domain in ['youtu']):
+            return 'youtube'

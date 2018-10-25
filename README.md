@@ -7,7 +7,6 @@ Achievement unlocks in Video Annotator
 - [Python 3+](https://www.python.org/downloads/)
 - [ffmpeg](https://www.ffmpeg.org/download.html)
 
-
 ## Install
 
     pip install -r requirements.txt

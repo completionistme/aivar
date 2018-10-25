@@ -1,46 +1,50 @@
-import codecs
-import json
+import glob
 import ntpath
 import urllib.request
 import xml.etree.cElementTree as ET
 
-import numpy as np
 from xmljson import parker
+
+from aivar.json import store_json
+from aivar.logger import info, success, progress
 
 
 class Handler:
+
+    def __init__(self):
+        self.type = 'generic'
+
     def download_subjects(self, job):
         raise NotImplementedError("Class %s doesn't implement aMethod()" % self.__class__.__name__)
 
 
 class SteamHandler(Handler):
-    def __init__(self, xml_stats_url):
+    def __init__(self, app_id, profile_id):
         super().__init__()
-        self.xml_stats_url = xml_stats_url
+        self.type = 'steam'
+        self.xml_stats_url = 'https://steamcommunity.com/profiles/' + profile_id + '/stats/appid/' + app_id + '/?tab=achievements&xml=1'
 
     def download_subjects(self, job):
         # download subjects
-        print('--')
-        print('download subjects from ' + self.xml_stats_url)
-        print('  to ' + job.subjects_dir)
+        info('downloading subjects definition from "' + self.xml_stats_url + '"...')
 
         # download xml
-        stats_xml = job.work_folder + 'stats.xml'
+        stats_xml = job.job_dir + 'subjects.xml'
         urllib.request.urlretrieve(self.xml_stats_url, stats_xml)
 
-        # download iconClosed images
+        # parse xml to json
         root = ET.parse(stats_xml).getroot()
         subjects = parker.data(root.find("./achievements"), preserve_root=True).get('achievements').get('achievement')
+        store_json(subjects, job.subjects_file)
+
+        # download icons
+        info('downloading subjects...')
+        i = 0
+        total = len(subjects)
+        progress(i, total)
         for subject in subjects:
             subject_url = subject.get('iconClosed')
             urllib.request.urlretrieve(subject_url, job.subjects_dir + ntpath.basename(subject_url))
-
-        def default(o):
-            if isinstance(o, np.int64): return int(o)
-            raise TypeError
-
-        # store subjects as json
-        json.dump(subjects, codecs.open(job.subjects_file, 'w', encoding='utf-8'), separators=(',', ':'),
-                  sort_keys=True, indent=4, default=default)
-        print('subjects stored to ' + job.subjects_file)
-        print('done')
+            i = i + 1
+            progress(i, total)
+        success('stored ' + str(len(glob.glob(job.subjects_dir + "*.jpg"))) + ' subjects to ' + job.subjects_dir)
