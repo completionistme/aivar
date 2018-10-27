@@ -13,49 +13,45 @@
     <link href="https://vjs.zencdn.net/7.2.3/video-js.css" rel="stylesheet">
 </head>
 <body>
-<div class="container">
+<div class="embed-responsive embed-responsive-16by9 mb-3 mx-auto position-fixed" style="height: 50vh; top: 0; z-index: 1">
+    <video id="player" class="embed-responsive-item video-js" controls></video>
+</div>
+<div class="p-3" style="margin-top: 50vh">
     <div class="row">
-        <div class="col-md-6">
-            <div class="embed-responsive embed-responsive-16by9 mb-3">
-                <video id="player" class="embed-responsive-item video-js" controls>
-                    <p class="vjs-no-js">
-                        To view this video please enable JavaScript, and consider upgrading to a web browser that
-                        <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
-                    </p>
-                </video>
-            </div>
-            <div id="unlocks"></div>
+        <div class="col-md-12">
+            <div id="unlocked"></div>
+            <div id="locked"></div>
             <!--<pre id="subjects"></pre>-->
             <!--<pre id="matches"></pre>-->
             <!--<pre id="results"></pre>-->
         </div>
     </div>
-    <script>
-        window.videoId = '%video_id%';
-        window.videoUrlMp4 = '%video_url_mp4%';
-        window.videoPoster = '%video_poster_url%';
-        window.frameInterval = parseInt('%frame_interval_seconds%');
-        window.subjects = %subjects%;
-        window.matches = %matches%;
-        window.results = %results%;
-    </script>
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <script src="https://vjs.zencdn.net/7.2.3/video.js"></script>
-    <script>
-        var player = videojs('player');
-        player.src(videoUrlMp4);
-        player.poster(videoPoster);
-        player.ready(function() {
-        });
-        window.seekTo = function(seconds) {
-            player.currentTime(seconds);
-            if (player.paused()) {
-                player.play();
-            }
-        }
-    </script>
-    <script src="../../templates/aivar.js"></script>
 </div>
+<script>
+    window.videoId = '%video_id%';
+    window.videoUrlMp4 = '%video_url_mp4%';
+    window.videoPoster = '%video_poster_url%';
+    window.frameInterval = parseInt('%frame_interval_seconds%');
+    window.subjects = %subjects%;
+    window.matches = %matches%;
+    window.results = %results%;
+</script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://vjs.zencdn.net/7.2.3/video.js"></script>
+<script>
+    var player = videojs('player');
+    player.src(videoUrlMp4);
+    player.poster(videoPoster);
+    player.ready(function() {
+    });
+    window.seekTo = function(seconds) {
+        player.currentTime(seconds);
+        if (player.paused()) {
+            player.play();
+        }
+    }
+</script>
+<script src="../../templates/aivar.js"></script>
 </body>
 </html>

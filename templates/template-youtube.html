@@ -12,72 +12,71 @@
           integrity="sha384-w+yWASP3zYNxxvwoQBD5fUSc1tctKq4KUiZzxgkBSJACiUp+IbweVKvsEhMI+gz7" crossorigin="anonymous">
 </head>
 <body>
-<div class="container">
+<div class="embed-responsive embed-responsive-16by9 mb-3 mx-auto position-fixed" style="height: 50vh; top: 0; z-index: 1">
+    <div id="player" class="embed-responsive-item"></div>
+</div>
+<div class="p-3" style="margin-top: 50vh">
     <div class="row">
-        <div class="col-md-6">
-            <div class="embed-responsive embed-responsive-16by9 mb-3">
-                <div id="player" class="embed-responsive-item"></div>
-            </div>
-            <div id="unlocks"></div>
+        <div class="col-md-12">
+            <div id="unlocked"></div>
+            <div id="locked"></div>
             <!--<pre id="subjects"></pre>-->
             <!--<pre id="matches"></pre>-->
             <!--<pre id="results"></pre>-->
         </div>
-        <div class="col-md-6">
-        </div>
     </div>
-    <script>
-        window.videoId = '%video_id%';
-        window.frameInterval = parseInt('%frame_interval_seconds%');
-        window.subjects = %subjects%;
-        window.matches = %matches%;
-        window.results = %results%;
-    </script>
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://www.youtube.com/iframe_api"></script>
-    <script>
-        var player;
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-                height: '390',
-                width: '640',
-                videoId: videoId,
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
-                }
-            });
-        }
-        function onPlayerReady(event) {
-            event.target.playVideo();
-        }
-        var done = false;
-        var ytSeconds = 0;
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.PLAYING && !done) {
-                //     setTimeout(stopVideo, 6000);
-                //     done = true;
-            }
-            if (event.data === 1 && ytSeconds > 0) {
-                event.target.seekTo(ytSeconds);
-                ytSeconds = 0;
-            }
-        }
-        function stopVideo() {
-            player.stopVideo();
-        }
-        window.seekTo = function(seconds) {
-            if (player.getPlayerState() === 1) {
-                player.seekTo(seconds);
-            }
-            else {
-                ytSeconds = seconds;
-                player.playVideo();
-            }
-        }
-    </script>
-     <script src="../../templates/aivar.js"></script>
 </div>
+<script>
+    window.videoId = '%video_id%';
+    window.frameInterval = parseInt('%frame_interval_seconds%');
+    window.subjects = %subjects%;
+    window.matches = %matches%;
+    window.results = %results%;
+</script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://www.youtube.com/iframe_api"></script>
+<script>
+    var player;
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+            height: '390',
+            width: '640',
+            videoId: videoId,
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+    function onPlayerReady(event) {
+        event.target.playVideo();
+    }
+    var done = false;
+    var ytSeconds = 0;
+    function onPlayerStateChange(event) {
+        if (event.data === YT.PlayerState.PLAYING && !done) {
+            //     setTimeout(stopVideo, 6000);
+            //     done = true;
+        }
+        if (event.data === 1 && ytSeconds > 0) {
+            event.target.seekTo(ytSeconds);
+            ytSeconds = 0;
+        }
+    }
+    function stopVideo() {
+        player.stopVideo();
+    }
+    window.seekTo = function(seconds) {
+        if (player.getPlayerState() === 1) {
+            player.seekTo(seconds);
+        }
+        else {
+            ytSeconds = seconds;
+            player.playVideo();
+        }
+    }
+</script>
+<script src="../../templates/aivar.js"></script>
 </body>
 </html>

@@ -21,6 +21,9 @@ class Aivar:
     def __init__(self, job):
         self.job = job
         self.matched_subject_size = 0
+        self.last_matched_subject = ''
+        self.last_matched_frame = ''
+        self.last_matched_frame_index = 0
 
     def process(self):
         self.prepare()
@@ -105,7 +108,7 @@ class Aivar:
         if os.path.exists(self.job.video_poster_path):
             success('poster exists')
             return
-        info('extracting poster at ...' + str(int(time)))
+        info('extracting poster at ' + str(int(time)) + '...')
         try:
             (
                 ffmpeg.input(video_file, ss=time)
@@ -194,17 +197,19 @@ class Aivar:
 
         info('searching for ' + str(len(subjects)) + ' subjects in ' + str(len(frames)) + ' frames...')
 
-        i = 0
+        frame_index = 0
+        subject_index = 0
         total = len(subjects) * len(frames)
 
         for frame in frames:
+            frame_index = frame_index + 1
             for subject in subjects:
-                progress(i, total)
-                i = i + 1
-                match = self.search_frame_ir(frame, subject)
+                progress(subject_index, total)
+                subject_index = subject_index + 1
+                match = self.search_frame_ir(frame, subject, frame_index)
                 if match:
                     matches.append(match)
-        progress(i, total)
+        progress(subject_index, total)
 
         for result in matches:
             highlight('found subject ' + result.get('subject') + ' (' + str(
@@ -215,7 +220,7 @@ class Aivar:
 
         return matches
 
-    def search_frame_ir(self, frame, subject):
+    def search_frame_ir(self, frame, subject, frame_index):
         frame_filename = os.path.basename(frame)
         subject_filename = os.path.basename(subject)
 
@@ -230,7 +235,7 @@ class Aivar:
         sizes = range(65, 31, -2)
 
         if self.matched_subject_size > 0:
-            sizes = range(self.matched_subject_size, self.matched_subject_size - 1, -1)
+            sizes = range(self.matched_subject_size + 1, max(self.matched_subject_size - 11, 31), -1)
 
         def prep_subject(image, size):
             # subject_rgb_prep = cv2.cvtColor(subject_rgb_prep, cv2.COLOR_BGR2GRAY)
@@ -248,6 +253,8 @@ class Aivar:
 
             matches = []
             if loc[0].size > 0:
+                # and self.last_matched_subject != subject_filename:
+                # and frame_index != self.last_matched_frame_index + 1:
                 for pt in zip(*loc[::-1]):  # switch columns and rows
                     matches.append({
                         "pos": pt,
@@ -265,7 +272,12 @@ class Aivar:
                     "subject_size": subject_size,
                 }
                 # remember subject size to speed up the process for subsequent frames
-                self.matched_subject_size = subject_size
+                self.last_matched_subject = subject_filename
+                self.last_matched_frame = frame_filename
+                self.last_matched_frame_index = frame_index
+                if self.matched_subject_size == 0 or subject_size < self.matched_subject_size:
+                    self.matched_subject_size = subject_size
+                # print('👍 ' + subject_filename + '' + str(subject_size))
                 return result
         return
 
