@@ -62,12 +62,13 @@ class Aivar:
 
         if self.job.video_type == 'local':
             extension = Path(self.job.video_url).suffix
-            copy(self.job.video_url, self.job.source_dir + self.job.video_source_name + extension)
+            copy(self.job.video_url, os.path.join(self.job.source_dir, self.job.video_source_name + extension))
 
         success('stored to ' + self.job.source_dir)
 
     def prepare_video(self):
         self.transcode_video(self.job.video_url, self.job.video_source_path)
+        # self.transcode_video(self.job.video_source_path, self.job.video_source_webm_path)
         video_probe = self.get_video_probe()
         width = int(video_probe['width'])
         height = int(video_probe['height'])
@@ -77,27 +78,28 @@ class Aivar:
         self.extract_poster(self.job.video_source_path, self.job.video_poster_path, poster_time)
 
     def probe_video(self, video_file):
-        if os.path.exists(self.job.job_dir + 'source.json'):
+        if os.path.exists(self.job.source_file):
             success('source probe info exists')
             return
         info('probing video...')
         probe = ffmpeg.probe(video_file)
-        store_json(probe, self.job.job_dir + 'source.json')
+        store_json(probe, self.job.source_file)
 
     def get_video_probe(self):
-        if not os.path.exists(self.job.job_dir + 'source.json'):
+        if not os.path.exists(self.job.source_file):
             self.probe_video(self.job.video_source_path)
-        probe_file = json.loads(Path(self.job.job_dir + 'source.json').read_text())
+        probe_file = json.loads(Path(self.job.source_file).read_text())
         return next((stream for stream in probe_file['streams'] if stream['codec_type'] == 'video'), None)
 
     def transcode_video(self, video_file, output):
-        if os.path.exists(self.job.video_source_path):
+        if os.path.exists(output):
             return
-        info('transcoding video...')
+        info('transcoding video to ' + output + '...')
         try:
-            ffmpeg.input(video_file).output(output).run(quiet=True, capture_stderr=True)
+            ffmpeg.input(video_file).output(output).run(quiet=False, capture_stderr=True)
         except ffmpeg.Error as err:
             error(codecs.escape_decode(err.stderr)[0].decode("utf-8"))
+        exit()
 
     def extract_poster(self, video_file, output, time):
         if os.path.exists(self.job.video_poster_path):
@@ -136,11 +138,11 @@ class Aivar:
 
     def search_area(self, area_key):
         info('searching in ' + area_key + ' area ...')
-        area_dir = self.job.frames_dir + area_key + '/'
+        area_dir = os.path.join(self.job.frames_dir, area_key)
         if not os.path.exists(area_dir):
             self.extract_frames(area_key, area_dir)
 
-        frames = glob.glob(area_dir + "*.jpg")
+        frames = glob.glob(os.path.join(area_dir, "*.jpg"))
 
         if len(frames) == 0:
             raise ValueError('No frames available. Video too short?')
@@ -151,7 +153,7 @@ class Aivar:
 
         frames.sort(key=file_basename)
 
-        subjects = glob.glob(self.job.subjects_dir + "*.jpg")
+        subjects = glob.glob(os.path.join(self.job.subjects_dir, "*.jpg"))
         return self.ir(frames, subjects)
 
     def extract_frames(self, area_key, output_dir):
@@ -176,14 +178,14 @@ class Aivar:
                     .input(self.job.video_source_path)
                     .crop(*crop_area)
                     .filter('fps', '1/' + str(self.job.frame_interval_seconds))
-                    .output(output_dir + '/%05d.jpg')
+                    .output(os.path.join(output_dir, '%05d.jpg'))
                     .run(quiet=True, capture_stderr=True)
             )
         except ffmpeg.Error as err:
             # decode error message and print to stdout
             # from: https://stackoverflow.com/a/37059682/580651
             error(codecs.escape_decode(err.stderr)[0].decode("utf-8"))
-        success('stored ' + str(len(glob.glob(output_dir + '*.jpg'))) + ' frames to ' + output_dir)
+        success('stored ' + str(len(glob.glob(os.path.join(output_dir, '*.jpg')))) + ' frames to ' + output_dir)
 
     def ir(self, frames, subjects):
         # search for subjects in frames
@@ -253,9 +255,10 @@ class Aivar:
                         "h": h,
                     })
                     cv2.rectangle(frame_rgb, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
-                match_file_name = self.job.matches_dir + os.path.splitext(frame_filename)[0] + '-' + \
-                                  os.path.splitext(subject_filename)[0] + os.path.splitext(frame_filename)[1]
-                cv2.imwrite(match_file_name, frame_rgb)
+                match_file_name = os.path.splitext(frame_filename)[0] + '-' + os.path.splitext(subject_filename)[0] + \
+                                  os.path.splitext(frame_filename)[1]
+                match_file = os.path.join(self.job.matches_dir, match_file_name)
+                cv2.imwrite(match_file, frame_rgb)
                 result = {
                     "frame": frame_filename,
                     "subject": subject_filename,

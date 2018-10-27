@@ -1,3 +1,5 @@
+import os
+
 CEND = '\33[0m'
 CBOLD = '\33[1m'
 CITALIC = '\33[3m'
@@ -45,43 +47,64 @@ CWHITEBG2 = '\33[107m'
 
 def section(*texts, end='\n'):
     for text in texts:
-        print(CBOLD + CVIOLET2 + text + CEND, end=end)
+        if os.name == 'nt':
+            print(text, end=end)
+        else:
+            print(CBOLD + CVIOLET2 + text + CEND, end=end)
 
 
 def section_end(*texts, end='\n'):
     for text in texts:
-        print(CBOLD + CVIOLET + text + CEND, end=end)
+        if os.name == 'nt':
+            print(text, end=end)
+        else:
+            print(CBOLD + CVIOLET + text + CEND, end=end)
     print()
 
 
 def info(*texts, end='\n'):
     for text in texts:
-        print(CBLUE + text + CEND, end=end)
+        if os.name == 'nt':
+            print(text, end=end)
+        else:
+            print(CBLUE + text + CEND, end=end)
 
 
 def success(*texts, end='\n'):
     for text in texts:
-        print(CGREEN + text + CEND, end=end)
+        if os.name == 'nt':
+            print(text, end=end)
+        else:
+            print(CGREEN + text + CEND, end=end)
 
 
 def highlight(*texts, end='\n'):
     for text in texts:
-        print(CBOLD + CYELLOW2 + text + CEND, end=end)
+        if os.name == 'nt':
+            print(text, end=end)
+        else:
+            print(CBOLD + CYELLOW2 + text + CEND, end=end)
 
 
 def warn(*texts, end='\n'):
     for text in texts:
-        print(CYELLOW + text + CEND, end=end)
+        if os.name == 'nt':
+            print(text, end=end)
+        else:
+            print(CYELLOW + text + CEND, end=end)
 
 
 def error(*texts, end='\n'):
     for text in texts:
-        print(CRED + text + CEND, end=end)
+        if os.name == 'nt':
+            print(text, end=end)
+        else:
+            print(CRED + text + CEND, end=end)
 
 
 # from: https://stackoverflow.com/a/34325723/580651
 # from: https://stackoverflow.com/a/27871113/580651
-def progress(iteration, total, decimals=1, length=100, fill='█'):
+def progress(iteration, total, decimals=1, length=60, fill='█'):
     # bar_len = 60
     # filled_len = int(round(bar_len * count / float(total)))
     #
@@ -93,7 +116,12 @@ def progress(iteration, total, decimals=1, length=100, fill='█'):
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
-    info('\r|%s| %s/%s %s%%' % (bar, iteration, total, percent), end=' ')
+    #info('\r|%s| %s/%s %s%%' % (bar, iteration, total, percent), end=' ')
+    if os.name == 'nt':
+        end = '\r'
+    else:
+        end = ' '
+    info('\r|%s| %s/%s %s%%' % (bar, iteration, total, percent), end=end)
     # Print New Line on Complete
     if iteration == total:
         print()
