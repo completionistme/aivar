@@ -102,7 +102,6 @@ class Aivar:
             ffmpeg.input(video_file).output(output).run(quiet=False, capture_stderr=True)
         except ffmpeg.Error as err:
             error(codecs.escape_decode(err.stderr)[0].decode("utf-8"))
-        exit()
 
     def extract_poster(self, video_file, output, time):
         if os.path.exists(self.job.video_poster_path):
